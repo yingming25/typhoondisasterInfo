@@ -1,7 +1,50 @@
+
 <template>
   <div class="hello">
-    <table class="table" id="table">
+    <div>請輸入查詢區域(ex.大安區): <input type="text" v-model="filter_name"></div>
+    <table id="table" class="table">
+        <thead>
+          <tr>
+              <th>#</th>
+              <th>發生日期:</th>
+              <th>發生地區:</th>
+              <th>發生地點:</th>
+              <th>事件狀況:</th>
+              <th>事件描述:</th>
+              <th>災情種類:</th>
+              <th>聯絡單位:</th>
+              <th>案件處理狀況:</th>
+
+          </tr>
+        </thead>
+        <tbody>
+            <tr v-for="(r, index) in filteredRows.slice(pageStart, pageStart + countOfPage)">
+              <td>{{ (currPage-1) * countOfPage + index + 1 }}</td>
+              <td>{{ r.DPName }}</td>
+              <td>{{ r.CaseLocationDistrict }}</td>
+              <td>{{ r.CaseLocationDescription }}</td>
+              <td>{{ r.Name }}</td>
+              <td>{{ r.CaseDescription }}</td>
+              <td>{{ r.PName }}</td>
+              <td>{{ r.CaseCommunicatorUnit }}</td>
+              <td>{{ r.CaseComplete }}</td>
+            </tr>
+        </tbody>
     </table>
+    <div class="pagination">
+      <ul>
+        <li v-bind:class="{'disabled': (currPage === 1)}"
+            @click.prevent="setPage(currPage-1)"><a href="#">Prev</a></li>
+        <li v-for="n in totalPage"
+            v-bind:class="{'active': (currPage === (n))}"
+            @click.prevent="setPage(n)"><a href="#">{{n}}</a></li>
+        <li v-bind:class="{'disabled': (currPage === totalPage)}"
+            @click.prevent="setPage(currPage+1)"><a href="#">Next</a></li>
+      </ul>
+    </div>
+
+
+
 
   </div>
 </template>
@@ -11,89 +54,72 @@ export default {
   name: 'hello',
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App',
+      rows: [],
+      countOfPage: 50,
+      currPage: 1,
+      filter_name: ''
+    }
+  },
+  computed: {
+    filteredRows: function(){
+    var filter_name = this.filter_name;
+
+    // 如果 filter_name 有內容，回傳過濾後的資料，否則將原本的 rows 回傳。
+    return ( this.filter_name.trim() !== '' ) ?
+      this.rows.filter(function(d){ return d.CaseLocationDistrict.indexOf(filter_name) > -1;}) :
+      this.rows;
+    },
+    pageStart: function(){
+        return (this.currPage - 1) * this.countOfPage;
+      },
+    totalPage: function(){
+      return Math.ceil(this.filteredRows.length / this.countOfPage);
     }
   },
   methods: {
-    getAjax () {
+    getAjax: function() {
       // GET /someUrl
       this.$http.get('https://tcgbusfs.blob.core.windows.net/blobfs/GetDisasterSummary.json').then(response => {
-      //console.log(response);
+
       // get body data
-      //this.someData = response.body;
-      let content = [];
-      content.push(response.body);
-      let data = content[0].DataSet['diffgr:diffgram'].NewDataSet.CASE_SUMMARY;
-      let table = document.querySelector('.table');
-      let str = '';
+      this.someData = response.body;
+      let data = this.someData.DataSet['diffgr:diffgram'].NewDataSet.CASE_SUMMARY;
+      //console.log(data);
+
       let Len = data.length;
-
-      str += `
-        <thead>
-          <tr>
-            <th>發生日期:</th>
-            <th>發生地區:</th>
-            <th>發生地點:</th>
-            <th>事件狀況:</th>
-            <th>事件描述:</th>
-            <th>災情種類:</th>
-            <th>聯絡單位:</th>
-            <th>案件處理狀況:</th>
-          </tr>
-        </thead>
-      `;
-
-
-      for (let i = 0; i < Len; i++) {
-        if( data[i].CaseComplete == "true" ) {
-            data[i].CaseComplete = "已處理";
-            str +=`
-              <tr>
-                <td>${ data[i].DPName }</td>
-                <td>${ data[i].CaseLocationDistrict }</td>
-                <td>${ data[i].CaseLocationDescription }</td>
-                <td>${ data[i].Name }</td>
-                <td>${ data[i].CaseDescription }</td>
-                <td>${ data[i].PName }</td>
-                <td>${ data[i].CaseCommunicatorUnit }</td>
-                <td>${ data[i].CaseComplete }</td>
-              </tr>
-            `;
+      for(let i = 0; i < Len; i++) {
+        if(data[i].CaseComplete == 'true') {
+          data[i].CaseComplete = '已處理';
+          this.rows.push(data[i]);
         }else {
-            data[i].CaseComplete = "待處理";
-            str +=`
-              <tr>
-                <td>${ data[i].DPName }</td>
-                <td>${ data[i].CaseLocationDistrict }</td>
-                <td>${ data[i].CaseLocationDescription }</td>
-                <td>${ data[i].Name }</td>
-                <td>${ data[i].CaseDescription }</td>
-                <td>${ data[i].PName }</td>
-                <td>${ data[i].CaseCommunicatorUnit }</td>
-                <td>${ data[i].CaseComplete }</td>
-              </tr>
-            `;
+          data[i].CaseComplete = '未處理';
+          this.rows.push(data[i]);
         }
 
-
       }
-      table.innerHTML = str;
+      //console.log(this.rows);
+      }, response => {
+      // error callback
 
-
-      }).catch(function(e) {
-        console.log(e);
       });
     },
-
+     setPage: function(idx){
+      if( idx <= 0 || idx > this.totalPage ){
+        return;
+      }
+      this.currPage = idx;
+    },
   },
-    mounted () {
-      this.getAjax();
-    }
+  mounted () {
+    this.getAjax();
+
+  }
+
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style>
+<style scoped>
 h1, h2 {
   font-weight: normal;
 }

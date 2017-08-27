@@ -11,8 +11,9 @@ import Navbar from './components/partials/Navbar'
 export default {
   name: 'app',
   components: {
-    Navbar
+    Navbar,
   }
+
 }
 </script>
 
