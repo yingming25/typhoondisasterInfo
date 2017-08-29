@@ -1,7 +1,12 @@
 
 <template>
   <div class="hello">
-    <div>請輸入查詢區域(ex.大安區): <input type="text" v-model="filter_name"></div>
+    <select class="custom-select" v-model="selected" @change="onChange">
+      <option v-for="option in options" v-bind:value="option.value">
+        {{ option.text }}
+      </option>
+    </select>
+    <span>Selected: {{ selected }}</span>
     <table id="table" class="table">
         <thead>
           <tr>
@@ -18,7 +23,7 @@
           </tr>
         </thead>
         <tbody>
-            <tr v-for="(r, index) in filteredRows.slice(pageStart, pageStart + countOfPage)">
+            <tr v-for="(r, index) in rows.slice(pageStart, pageStart + countOfPage)">
               <td>{{ (currPage-1) * countOfPage + index + 1 }}</td>
               <td>{{ r.DPName }}</td>
               <td>{{ r.CaseLocationDistrict }}</td>
@@ -57,23 +62,39 @@ export default {
       rows: [],
       countOfPage: 50,
       currPage: 1,
-      filter_name: ''
+      selected: 'A',
+      firstInit: true,
+      options: [
+        { text: '--請選擇地區--', value: 'A' },
+        { text: '中正區', value: '中正區' },
+        { text: '大同區', value: '大同區' },
+        { text: '中山區', value: '中山區' },
+        { text: '松山區', value: '松山區' },
+        { text: '大安區', value: '大安區' },
+        { text: '萬華區', value: '萬華區' },
+        { text: '信義區', value: '信義區' },
+        { text: '士林區', value: '士林區' },
+        { text: '北投區', value: '北投區' },
+        { text: '內湖區', value: '內湖區' },
+        { text: '南港區', value: '南港區' },
+        { text: '文山區', value: '文山區' },
+      ]
     }
   },
   computed: {
-    filteredRows: function(){
+    /*filteredRows: function(){
     var filter_name = this.filter_name;
 
     // 如果 filter_name 有內容，回傳過濾後的資料，否則將原本的 rows 回傳。
     return ( this.filter_name.trim() !== '' ) ?
       this.rows.filter(function(d){ return d.CaseLocationDistrict.indexOf(filter_name) > -1;}) :
       this.rows;
-    },
+    },*/
     pageStart: function(){
         return (this.currPage - 1) * this.countOfPage;
       },
     totalPage: function(){
-      return Math.ceil(this.filteredRows.length / this.countOfPage);
+      return Math.ceil(this.rows.length / this.countOfPage);
     }
   },
   methods: {
@@ -88,12 +109,23 @@ export default {
 
       let Len = data.length;
       for(let i = 0; i < Len; i++) {
-        if(data[i].CaseComplete == 'true') {
-          data[i].CaseComplete = '已處理';
-          this.rows.push(data[i]);
-        }else {
-          data[i].CaseComplete = '未處理';
-          this.rows.push(data[i]);
+        if(this.firstInit) {
+          if(data[i].CaseComplete == 'true') {
+            data[i].CaseComplete = '已處理';
+            this.rows.push(data[i]);
+          }else {
+            data[i].CaseComplete = '未處理';
+            this.rows.push(data[i]);
+          }
+        }
+        if( data[i].CaseLocationDistrict == this.selected ){
+          if(data[i].CaseComplete == 'true') {
+            data[i].CaseComplete = '已處理';
+            this.rows.push(data[i]);
+          }else {
+            data[i].CaseComplete = '未處理';
+            this.rows.push(data[i]);
+          }
         }
 
       }
@@ -109,11 +141,18 @@ export default {
       }
       this.currPage = idx;
     },
+    onChange: function() {
+      console.log(this.selected);
+      this.rows=[];
+      this.firstInit = false;
+      this.getAjax();
+    }
   },
   mounted () {
+    console.log(this.selected);
     this.getAjax();
 
-  }
+  },
 
 }
 </script>
