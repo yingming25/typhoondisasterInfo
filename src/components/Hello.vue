@@ -60,6 +60,7 @@ export default {
   data () {
     return {
       rows: [],
+      page: false,
       countOfPage: 50,
       currPage: 1,
       selected: 'A',

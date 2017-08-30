@@ -10,6 +10,7 @@
   name: 'hello',
   data () {
     return {
+      page: false
     }
   },
   methods: {

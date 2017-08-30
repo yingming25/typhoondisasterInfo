@@ -1,17 +1,31 @@
 <template>
   <div id="app">
     <Navbar></Navbar>
+    <Hello v-if="page"></Hello>
     <router-view></router-view>
   </div>
 </template>
 
+
+
 <script>
 import Navbar from './components/partials/Navbar'
+import Child from './components/Child'
+import Hello from './components/Hello'
 
 export default {
   name: 'app',
+  data: {
+    page: true
+  },
+  created () {
+    this.page = true;
+  },
   components: {
-    Navbar,
+    Navbar, Child, Hello
+  },
+  mounted () {
+    this.page = false;
   }
 
 }
